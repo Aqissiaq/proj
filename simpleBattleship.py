@@ -3,7 +3,7 @@ from random import randrange
 from time import sleep
 # making a small batleship game... yea,let's try that
 
-class Board():
+class Board:
 
 	# the printed borad only prints *, and Xes, O if a ship has been found there
 	# the ships set contains tuple coordinates of where the 1x1 ships are
@@ -13,8 +13,6 @@ class Board():
 	#   Yes can do
 	#   t = ((x,y),) for a tuple containing one tuple
 	# NO LIST IN ANY SETS AT ANY LEVEL --> gives TypeError
-
-	#TODO - make changes to the actual board
 
 	def __init__(self, size):
 		self.size = size
@@ -64,7 +62,8 @@ class Board():
 			print("There is already a ship here")
 			return False
 
-	def guessShip(self,guess): #guess here is a rowcol tuple
+	def guessShip(self,guess):
+		#guess here is a rowcol tuple
 		isHit = False
 		if self.board[guess[0]][guess[1]] != "*":
 			print("You found have already guessed that tile!")
@@ -75,7 +74,7 @@ class Board():
 			isHit = True
 
 		else:
-			self.board[guess[0]][guess[1]]= "X"
+			self.board[guess[0]][guess[1]] = "X"
 			print("You missed!")
 
 		return isHit
@@ -100,7 +99,7 @@ class Board():
 		return "(" + str(_tuple[0] + 1) + ", " + str(_tuple[1] + 1) + ")"
 
 
-class Player():
+class Player:
 
 	total_players = 0
 
@@ -172,7 +171,7 @@ class ComputerPlayer(Player):
 		return randrange(self.myBoard.size),randrange(self.myBoard.size)
 
 
-class Game():
+class Game:
 
 	def __init__(self):
 		boardSize, twoPlayer = self.gameSetup()
@@ -223,7 +222,7 @@ class Game():
 
 	def makePlayers(self, noPlayers):
 
-		p1, p2 = None, None
+		# p1, p2 = None, None
 
 		if noPlayers == 0:
 			print("Two (dummy) computers playing against each other")
@@ -277,7 +276,7 @@ class Game():
 			for i in range(num):
 				player.place1x1Ship()
 
-		shipsToFind = setNoShips(_max=(self.boardSize)**2)
+		shipsToFind = setNoShips(_max = self.boardSize ** 2)
 
 		placeShips(self.player1, shipsToFind)
 		print("\n"*20, "-----"*self.boardSize,"\n"*20, sep = "")
@@ -311,7 +310,7 @@ class Game():
 
 			while currentOpponent.myBoard.guessShip(guess):
 				currentPlayer.numShipsFound += 1
-				if (currentPlayer.numShipsFound == toFind):
+				if currentPlayer.numShipsFound == toFind:
 					sleep(.5);  print("\nYou found all the ships!");    win = True
 					break
 
@@ -346,6 +345,7 @@ class Game():
 def main():
 	game = Game()
 	game.play()
+
 
 if __name__ == '__main__':
 	main()
