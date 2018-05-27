@@ -2,7 +2,7 @@
 from random import randrange
 from time import sleep
 # making a small batleship game... yea,let's try that
-
+# Now expanding so that i can allow ships bigger than 1x1
 
 
 '''
@@ -53,8 +53,7 @@ class Game():
 '''
 
 
-
-class Tile():
+class Tile:
 	# TODO - Make a TILE class
 
 	def __init__(self, rowCoord, colCoord, isGuessed = False, isShipTile = False):
@@ -71,23 +70,24 @@ class Tile():
 		else:
 			return "O"
 
-
 class ShipTile(Tile):
 
-	def __init__(self, rowCoord, colCoord, isGuessed = False, lengthOfShip = 1, horizontal = False):
-		super().__init__(rowCoord, colCoord, isGuessed = isGuessed, isShipTile = True)
-		self.lengthOfShip = lengthOfShip
-		self.horizontal = False
+	premittedLenghts = {1, 2, 3, 4}
+
+	def __init__(self, rowCoord, colCoord, isGuessed = False, isShipTile = False, length = 1):
+		super().__init__(rowCoord, colCoord, isGuessed = False, isShipTile = True)
+
+		if length not in ShipTile.premittedLenghts:
+			print("Not allowed to have a ship of this lenght")
+			raise ValueError
+		self.length = length
 
 	def __len__(self):
-		return self.lengthOfShip
-
-	def setRowCol(self, row, col):
-		self.row = row
-		self.col = col
+		return self.length
 
 
-class Board():
+
+class Board:
 
 	# the printed borad only prints *, and Xes, O if a ship has been found there
 	# the ships set contains tuple coordinates of where the 1x1 ships are
@@ -102,9 +102,12 @@ class Board():
 
 	def __init__(self, size):
 		self.size = size
-		self.board = [(["*" for x in range(self.size)][:])for y in range(self.size)]
-		#TODO - Remove - Check win in Game.play() at the players
+		self.board = [([Tile(x,y) for y in range(self.size)])for x in range(self.size)]
+
+		#TODO - Remove - Check win in Game.play() at the players, separete hits and ships
 		self.foundShips = set()
+		self.ships = None
+		# fixme -  does not exisit anymroe
 
 	def __str__(self):
 		return self.make_print_board()
@@ -130,7 +133,7 @@ class Board():
 			board_str += str(rowIndex + 1) + "| "
 
 			for colIndex in range(self.size):
-				tile = row[colIndex]
+				tile = str(row[colIndex])
 				tile = " " + tile if colIndex != 0 else tile
 				# print(tile, end = " ")
 				board_str += tile + " "
@@ -143,14 +146,17 @@ class Board():
 
 		return board_str
 
-	def placeShip(self, row, col):
-		row,col = int(row), int(col)
-		if not (row,col) in self.ships:
-			self.ships.add((row,col))
-			return True
-		else:
-			print("There is already a ship here")
-			return False
+	def placeShip(self, start_row, start_col, deltaR, deltaC):
+
+		for x in range(start_row, start_row + deltaR):
+			for y in (start_col, deltaC):
+				if self.board[x][y].isShipTile:
+					print("Cannot overlay Ships, choose another placement")
+					return False
+
+
+	def changeToShipTile(self, row, col, shipTile):
+		self.board[row][col] = shipTile
 
 
 	# TODO - change input format
@@ -224,7 +230,7 @@ class Board():
 
 
 
-class Player():
+class Player:
 
 	total_players = 0
 
@@ -233,32 +239,13 @@ class Player():
 		self.name = name if name != "" else "Player" + str(Player.total_players)
 		self.myBoard = Board(boardSize)
 		self.numShipsFound = 0
-		self.placeableShips = []
+		self.lenghts = [1, 1, 1, 1, 2, 2, 2, 3, 3, 4]
 
-	def generatePlaceableShips(self):
-		options = (1, 1, 1, 1, 2, 2, 2, 3, 3, 4)
-		obtions = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
-		extra = (1,2,3,4,5)
 
-		if len(self.myBoard) < 5: # 3x3 og 4x4 --> 4 plasser til ship
-			for i in range(4):
-				ship = ShipTile(None, None, lengthOfShip=options[i])
-				self.placeableShips.append(ship)
 
-		elif len(self.myBoard) < 8: #  5x5, 6x6, 7x7
-			for i in range(0,10,2):
-				ship = ShipTile(None, None, lengthOfShip=options[i])
-				self.placeableShips.append(ship)
-
-		elif len(self.myBoard) > 10: # 8x8, 9x9
-			for i in range(4):
-				ship = ShipTile(None, None, lengthOfShip=options[i])
-				self.placeableShips.append(ship)
-
-		elif len(self.myBoard) > 1: # 8x8, 9x9
-			for i in range(4):
-				ship = ShipTile(None, None, lengthOfShip=options[i])
-				self.placeableShips.append(ship)
+	def generatePlaceableShips(self, sze, horizontal = True):
+		if sze in self.lenghts:
+			n = self.lenghts.pop(self.lenghts.index(sze))
 
 
 
@@ -273,6 +260,10 @@ class Player():
 		while not self.myBoard.placeShip(r, c):
 			print("Choose another place for your 1x1 ship!")
 			r,c = self.getRowCol()
+
+	def putShipsOnBoard(self):
+		print(self.myBoard)
+
 
 	#TODO - Make some changes here too
 	def makeGuess(self):
@@ -356,12 +347,11 @@ class ComputerPlayer(Player):
 		return randrange(self.myBoard.size),randrange(self.myBoard.size)
 
 
-class Game():
+class Game:
 
 	def __init__(self):
-		boardSize, twoPlayer = self.gameSetup()
-		self.boardSize = boardSize
-		self.player1, self.player2 = self.makePlayers(twoPlayer)
+		self.boardSize = 10
+		self.player1, self.player2 = self.makePlayers(self.gameSetup())
 		self.winner = None
 
 	@staticmethod
@@ -379,17 +369,17 @@ class Game():
 				rtn = False
 			return rtn
 
-		def getAndValidateSize():
-			try:
-				sze = int(input("Choose n: "))
-				if sze < 3 or sze > 15:
-					raise ValueError
-				_size = sze
-			except ValueError or SyntaxError or TypeError:
-				print("Not Allowed :/\n")
-				print("Defaulting to 10x10 board")
-				_size = 10
-			return _size
+		# def getAndValidateSize():
+		# 	try:
+		# 		sze = int(input("Choose n: "))
+		# 		if sze < 3 or sze > 15:
+		# 			raise ValueError
+		# 		_size = sze
+		# 	except ValueError or SyntaxError or TypeError:
+		# 		print("Not Allowed :/\n")
+		# 		print("Defaulting to 10x10 board")
+		# 		_size = 10
+		# 	return _size
 
 		def decidePlayers():
 			print("How many human players?")
@@ -398,15 +388,14 @@ class Game():
 				answer = (input("Answer 0, 1, or 2:\n"))
 			return int(answer)
 
-		print("Welcome this simple game of Battleship!")
-		print("The board is a nxn square")
-		size = getAndValidateSize()
+		print("Welcome this game of Battleship!")
+		print("The board is a 10x10 square")
 		noPlayers = decidePlayers()
 
-		return size, noPlayers
+		return noPlayers
 
-	def makePlayers(self, noPlayers):
-		# p1, p2 = None, None
+	def makePlayers(self, noPlayers = 2):
+		p1, p2 = None, None
 
 		if noPlayers == 0:
 			print("Two (dummy) computers playing against each other")
@@ -415,7 +404,7 @@ class Game():
 
 		else:
 			name = input("Give player 1 a name:\n")
-			p1 = Player(boardSize = self.boardSize, name=name)
+			p1 = Player(boardSize = self.boardSize, name = name)
 
 			if noPlayers == 1:
 				print("Playing against a (dummy) computer:")
@@ -423,7 +412,7 @@ class Game():
 
 			else:
 				name = input("Give player 2 a name:\n")
-				p2 = Player(boardSize = self.boardSize, name=name)
+				p2 = Player(boardSize = self.boardSize, name = name)
 
 		return p1, p2
 
@@ -446,26 +435,25 @@ class Game():
 
 			return isValid
 
-		def setNoShips(_max):
-			print("\nThe Boards are squares with size " + str(self.boardSize) + "x" + str(self.boardSize))
+		# def setNoShips(_max):
+		# 	print("\nThe Boards are squares with size " + str(self.boardSize) + "x" + str(self.boardSize))
+		#
+		# 	noShips = input("How many ships does each player place?\n")
+		# 	while not validateNoShips(noShips, _max):
+		# 		noShips = input("How many ships does each player place?\n")
+		# 	return int(noShips)
 
-			noShips = input("How many ships does each player place?\n")
-			while not validateNoShips(noShips, _max):
-				noShips = input("How many ships does each player place?\n")
-			return int(noShips)
-
-		def placeShips(player, num):
+		# TODO - Change things here too
+		def placeShips(player):
 			print("It is " + player.name + "'s turn to place ships")
-			print(player.myBoard)
-			for i in range(num):
-				player.place1x1Ship()
+			player.putShipsOnBoard()
 
-		shipsToFind = setNoShips(_max=(self.boardSize)**2)
+		shipsToFind = 10
 
-		placeShips(self.player1, shipsToFind)
+		placeShips(self.player1)
 		print("\n"*20, "-----"*self.boardSize,"\n"*20, sep = "")
 
-		placeShips(self.player2, shipsToFind)
+		placeShips(self.player2)
 		print("\n"*20, "-----"*self.boardSize,"\n"*20, sep = "")
 
 		print("READY TO START!!")
@@ -491,6 +479,8 @@ class Game():
 			print(currentOpponent.myBoard)
 
 			guess = currentPlayer.makeGuess()
+
+			#TODO: differ between hit and ship sunk, both in player and here
 
 			while currentOpponent.myBoard.guessShip(guess):
 				currentPlayer.numShipsFound += 1
@@ -529,6 +519,7 @@ class Game():
 def main():
 	game = Game()
 	game.play()
+
 
 if __name__ == '__main__':
 	main()
