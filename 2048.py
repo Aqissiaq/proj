@@ -23,11 +23,12 @@ Or we check for each possible step if the result is equal to the current field.
 If all four move options result in the same field as the current one.
 The player has lost because there is nothing else to do.
 
-####
-###
-#
+# # # # # # # # # # 
 I only wanted to try to write a version of the game myself, using the above text as a guide
     found on reddit, but i dont plan on using any of the lambdas
+    
+# # # # # # 
+Also, very much not done at all :)
 """
 SIZE = 4
 ######
