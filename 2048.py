@@ -31,14 +31,15 @@ I only wanted to try to write a version of the game myself, using the above text
 Also, very much not done at all :)
 """
 SIZE = 4
+CONT = True
+WIN = False
 ######
 
 def init(s = SIZE):
     return np.zeros((s,s),dtype=int)
 
 def printField(field):
-    for line in field:
-        print(line)
+    print(field)
     return field
 
 def add2or4(field):
@@ -46,6 +47,18 @@ def add2or4(field):
     ind = ra.randrange(tempX.shape[0])
     field[tempX[ind]][tempY[ind]] = int(np.random.choice((2, 4), 1, p=(.8,.2)))
     return field
+
+def CheckWinAndContinue(field):
+    global CONT
+    global WIN
+    if 2048 in field.flatten():
+        WIN = True
+        print("You have won!")
+        c = input("Type 'yes' if you wish to continue playing\t").lower()
+        CONT = True if c == 'yes' else False
+
+    return not WIN or CONT
+
 
 def test():
     printField(add2or4(init()))
