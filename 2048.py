@@ -30,39 +30,77 @@ I only wanted to try to write a version of the game myself, using the above text
 # # # # # # 
 Also, very much not done at all :)
 """
-SIZE = 4
-CONT = True
-WIN = False
-######
 
-def init(s = SIZE):
-    return np.zeros((s,s),dtype=int)
+class Game():
 
-def printField(field):
-    print(field)
-    return field
+    def __init__(self, SIZE=4, MSet="wasd", CONT=True, WIN=False, POINTS=0):
+        self.size = SIZE
+        self.field = np.zeros((self.size, self.size),dtype=int)
+        self.mset = MSet
+        self.cont = CONT
+        self.win = WIN
+        self.points = POINTS
 
-def add2or4(field):
-    tempX, tempY = np.where(field == 0)
-    ind = ra.randrange(tempX.shape[0])
-    field[tempX[ind]][tempY[ind]] = int(np.random.choice((2, 4), 1, p=(.8,.2)))
-    return field
-
-def CheckWinAndContinue(field):
-    global CONT
-    global WIN
-    if 2048 in field.flatten():
-        WIN = True
-        print("You have won!")
-        c = input("Type 'yes' if you wish to continue playing\t").lower()
-        CONT = True if c == 'yes' else False
-
-    return not WIN or CONT
+        self.currentMove = None
 
 
-def test():
-    printField(add2or4(init()))
 
-test()
+    def printField(self):
+        print('\nPoints: ', self.points)
+        print(self.field)
+        return self
+
+
+    def add2or4(self):
+        tempX, tempY = np.where(self.field == 0)
+        ind = ra.randrange(tempX.shape[0])
+        self.field[tempX[ind]][tempY[ind]] = int(np.random.choice((2, 4), 1, p=(.8,.2)))
+        return self
+
+
+    def CheckWinAndContinue(self):
+        if 2048 in self.field.flatten():
+            self.win = True
+            print("You have won!")
+            c = input("Type 'yes' if you wish to continue playing\t").lower()
+            self.cont = True if c == 'yes' else False
+        # return not self.win or self.cont
+        return self
+
+    def getMove(self):
+        move = input(self.mset + "?\t")
+        if len(move) != 1 or move not in self.mset:
+             move = self.getMove()
+        self.currentMove = move
+        return self
+
+
+    def executeMove(self):
+        # todo: add rotation to eval a swipe and rot back
+        # todo: calc points
+        rotKey = None
+        if self.currentMove == 'a':
+            for i in range(self.field.shape[0]):
+                self.field[i] = Game.mergeLine(self.field[i])
+        return self
+
+    @staticmethod #maybe not static
+    def mergeLine(line):
+        # todo: calc points
+
+        n = line.shape[0]
+        temp = np.trim_zeros(line)
+        # todo: add funtunality to merge tiles
+        return np.append(temp, [0 for i in range((n-len(temp)))])
+
+
+def run():
+    # todo: add  while (not game.win or game.cont): continue playing
+    game = Game()
+    game.printField()\
+        .add2or4().printField()\
+        .getMove().executeMove().printField()\
+
+run()
 
 
