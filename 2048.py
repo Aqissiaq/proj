@@ -33,13 +33,13 @@ Also, very much not done at all :)
 
 class Game():
 
-    def __init__(self, SIZE=4, MSet="wasd", CONT=True, WIN=False, POINTS=0):
-        self.size = SIZE
-        self.field = np.zeros((self.size, self.size),dtype=int)
+    def __init__(self, size=4, MSet="wasd", cont=True, win=False, points=0):
+        self.size = size
+        self.field = np.zeros((self.size, self.size), dtype=int)
         self.mset = MSet
-        self.cont = CONT
-        self.win = WIN
-        self.points = POINTS
+        self.cont = cont
+        self.win = win
+        self.points = points
 
         self.currentMove = None
 
@@ -80,26 +80,28 @@ class Game():
         # todo: calc points
         rotKey = None
         if self.currentMove == 'a':
-            for i in range(self.field.shape[0]):
-                self.field[i] = Game.mergeLine(self.field[i])
+            for i in range(self.size):
+                self.field[i] = Game.mergeLine(self.field[i], self.size)
+        self.currentMove = None
         return self
 
     @staticmethod #maybe not static
-    def mergeLine(line):
+    def mergeLine(line, n):
         # todo: calc points
-
-        n = line.shape[0]
         temp = np.trim_zeros(line)
         # todo: add funtunality to merge tiles
+
         return np.append(temp, [0 for i in range((n-len(temp)))])
 
 
-def run():
+def run(n=3):
     # todo: add  while (not game.win or game.cont): continue playing
+
     game = Game()
-    game.printField()\
-        .add2or4().printField()\
-        .getMove().executeMove().printField()\
+    for i in range(n):
+        print("i",i)
+        game.add2or4().printField()\
+            .getMove().executeMove().printField()\
 
 run()
 
