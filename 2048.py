@@ -1,5 +1,6 @@
 import random as ra
 import numpy as np
+import numpy.ma as ma
 
 # found on /r/ programminghorror
 # (lambda np,rand:(lambda d,ml,r,ff: (lambda l:lambda k:l(l,k))(lambda p,f:"YOU WON!" if len(list(filter(lambda x:x[1]==2048,np.ndenumerate(f))))>0 else "YOU LOSE!" if all([np.array_equal(f,n) for n in [np.rot90(list(map(ml,np.rot90(f,x[0]))), x[1]) for x in d.values()]]) else (lambda x:p(p,r(np.rot90(list(map(ml,np.rot90(f,x[0]))),x[1]))))(d[input("\033[2J"+str(f)+"\nwasd? ")]))(r(ff)))({"a":(0,0),"w":(1,-1),"s":(-1,1),"d":(2,2)},(lambda l:(lambda x: x+[0]*(4-len(x)))((lambda a:lambda v:a(a,v))(lambda rec,n:(n if len(n)<2 else [n[0]+n[1]]+rec(rec,n[2:]) if n[0]==n[1] else [n[0]]+rec(rec,n[1:])))(list(filter(lambda a:a!=0,l))))),(lambda f: ((lambda a,i,v: a.itemset(i, v) or a)(f,rand.choice(list(map(lambda x:x[0],filter(lambda x:x[1]==0,np.ndenumerate(f))))),2**rand.randint(1,2))) if len(list(filter(lambda x:x[1]==0,np.ndenumerate(f))))>0 else f),np.zeros((4,4),dtype=np.int)))(__import__("numpy"),__import__("random"))
@@ -75,8 +76,11 @@ class Game():
 
     def add2or4(self):
         tempX, tempY = np.where(self.field == 0)
+        if len(tempY) == 0:
+            self.cont = False
         ind = ra.randrange(tempX.shape[0])
         self.field[tempX[ind]][tempY[ind]] = int(np.random.choice((2, 4), 1, p=(.8,.2)))
+        self.points += self.field[tempX[ind]][tempY[ind]]
         return self
 
 
@@ -98,49 +102,51 @@ class Game():
 
 
     def executeMove(self):
+        self.getMove()
         # todo: calc points
 
-        #self.moveDict = {
-        #    "a": (0,0),
-        #    "w": (1,-1),
-        #    "s": (-1,1),
-        #    "d": (2,2)
-        #    }
-
         rotKey = self.moveDict[self.currentMove]
-
-        # todo: add rotation to eval a swipe and rot back
-
+        temp_field = np.rot90(self.field,rotKey[0])
 
         for i in range(self.size):
-            self.field[i] = Game.mergeLine(self.field[i], self.size)
+            temp_field[i] = Game.handleRow(temp_field[i], self.size)
 
-
+        self.field = np.rot90(temp_field, rotKey[1])
         self.currentMove = None
         return self
 
     @staticmethod #maybe not static
-    def mergeLine(line, n):
-        # todo: calc points
-        # todo: remove zeros not at the end too
-        temp = np.trim_zeros(line)
-        # todo: add funtunality to merge tiles
+    def handleRow(line, n):
+        temp = np.delete(line, np.where(line == 0))
+        newRow = Game.mergeLine(temp)
 
         return np.append(temp, [0 for i in range((n-len(temp)))])
 
+    @staticmethod
+    def mergeLine(line):
+        temp = []
+        # todo: calc points
+        # todo: add funtunality to merge tiles
 
-def run(n=3):
-    # todo: add  while (not game.win or game.cont): continue playing
 
-    game = Game(MSet='1235')
-    game.add2or4()
-    for i in range(n):
-        print("i",i)
-        game.add2or4().printField()\
-            .getMove().executeMove()
+        return np.asarray(temp, dtype=int)
+
+
+    def play(self, n=3):
+        # todo: add  while (not self.win or self.cont): continue playing
+
+        self.add2or4()
+        for i in range(n):
+            self.add2or4().printField().executeMove()
+
+
+
+def run():
+    game = Game(MSet='wasd')
+    game.play() # While loop is in this method - when loop ends, game is over
     game.printField()
-    print(f"You got {game.points} points!")
+    # print(f"You got {game.points} points!")
 
-run(5)
+run()
 
 
