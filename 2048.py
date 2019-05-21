@@ -99,11 +99,10 @@ class Game():
     def executeMove(self):
 
         def getMove():
-            move = input(self.mset + "?\t")
+            move = input('\n'+ self.mset + "?\t")
             if len(move) != 1 or move not in self.mset:
                 move = self.getMove()
             self.currentMove = move
-            return self
 
         def handleRow(line, n):
             temp_row = np.delete(line, np.where(line == 0))
@@ -116,6 +115,7 @@ class Game():
         temp_field = np.rot90(self.field, rotKey[0])
 
         for i in range(self.size):
+            print(f"row{i}", temp_field[i])
             temp_field[i] = handleRow(temp_field[i], self.size)
 
         self.field = np.rot90(temp_field, rotKey[1])
@@ -125,25 +125,36 @@ class Game():
 
     def mergeLine(self, line):
         def mergeTile(t1, t2):
+            print("tiles", t1, t2)
             if (t1 == t2):
                 return int(t1 + t2)
             return t1, t2
 
+        rtn = None #avoid tiny python warning
+
+        # fixme: not tested for lines like [2, 2, 4, 4} and [2, 2, 2, 4} -> [4, 4, 4, 0}
+        # [2, 2, 2, 8} -> [0, 0, 0, 4}
+
         for j in range(len(line) - 1):
             rtn = []
             temp = mergeTile(line[j], line[j+1])
+            print('temp', temp, type(temp))
             if type(temp) == int:
                 rtn.append(temp)
                 self.points += temp
+                #j += 1
+                #if j > (len(line) - 1): break
 
             elif type(temp) == tuple:
                 rtn.append(temp[0])
                 rtn.append(temp[1])
 
+            print('rtn', rtn)
+
         return np.asarray(rtn, dtype=int)
 
 
-    def play(self, n=5):
+    def play(self, n=10):
         # todo: add  while (not self.win or self.cont): continue playing
 
         self.add2or4()
