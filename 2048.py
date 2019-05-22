@@ -86,36 +86,26 @@ class Game():
         return self
 
 
-    def CheckWinAndContinue(self):
-        if 2048 in self.field.flatten():
-            self.win = True
-            print("You have won!")
-            c = input("Type 'yes' if you wish to continue playing\t").lower()
-            self.cont = True if c == 'yes' else False
-        # return not self.win or self.cont
-        return self
-
-
     def executeMove(self):
 
         def getMove():
             move = input('\n'+ self.mset + "?\t")
             if len(move) != 1 or move not in self.mset:
-                move = self.getMove()
-            self.currentMove = move
+                move = getMove()
+            return move
 
         def handleRow(line, n):
             temp_row = np.delete(line, np.where(line == 0))
             newRow = self.mergeLine(temp_row) if len (temp_row) > 1 else temp_row
             return np.append(newRow, [0 for k in range((n - len(newRow)))])
 
-        getMove()
+        self.currentMove = getMove()
 
         rotKey = self.moveDict[self.currentMove]
         temp_field = np.rot90(self.field, rotKey[0])
 
         for i in range(self.size):
-            print(f"row{i}", temp_field[i])
+            # print(f"row{i}", temp_field[i])
             temp_field[i] = handleRow(temp_field[i], self.size)
 
         self.field = np.rot90(temp_field, rotKey[1])
@@ -124,34 +114,35 @@ class Game():
 
 
     def mergeLine(self, line):
-        def mergeTile(t1, t2):
-            print("tiles", t1, t2)
-            if (t1 == t2):
-                return int(t1 + t2)
-            return t1, t2
+        # print("line", line, sep='\t', end='\n\n')
+        temp = line.tolist()    # for changing values inline
+        rtn = []                # Gather the values to be returned
 
-        rtn = None #avoid tiny python warning
+        for j in range(len(temp) - 1):
+            if (temp[j] == temp[j + 1]):
+                sc = line[j] + line[j+1]
+                self.points += (sc)
+                temp[j] = sc
+                temp[j+1] = 0
 
-        # fixme: not tested for lines like [2, 2, 4, 4} and [2, 2, 2, 4} -> [4, 4, 4, 0}
-        # [2, 2, 2, 8} -> [0, 0, 0, 4}
+            if temp[j] != 0:
+                rtn.append(temp[j])
 
-        for j in range(len(line) - 1):
-            rtn = []
-            temp = mergeTile(line[j], line[j+1])
-            print('temp', temp, type(temp))
-            if type(temp) == int:
-                rtn.append(temp)
-                self.points += temp
-                #j += 1
-                #if j > (len(line) - 1): break
-
-            elif type(temp) == tuple:
-                rtn.append(temp[0])
-                rtn.append(temp[1])
-
-            print('rtn', rtn)
+        # Try to add the last elemet in the list
+        if temp[-1] != 0:
+            rtn.append(temp[-1])
 
         return np.asarray(rtn, dtype=int)
+
+
+    def CheckWinAndContinue(self):
+        if 2048 in self.field.flatten():
+            self.win = True
+            print("You have won!")
+            c = input("Type 'yes' if you wish to continue playing\t").lower()
+            self.cont = True if c == 'yes' else False
+        # return not self.win or self.cont
+        return self
 
 
     def play(self, n=10):
