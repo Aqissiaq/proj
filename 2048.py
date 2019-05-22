@@ -37,13 +37,14 @@ I wanted to try to write a version of the game myself, that code
 
 class Game():
 
-    def __init__(self, size=4, MSet="wasd", cont=True, win=False, points=0):
+    def __init__(self, size=4, MSet="wasd", cont=True, win=False, points=0, winNumb=2048):
         self.size = size
         self.field = np.zeros((self.size, self.size), dtype=int)
         self.mset = MSet
         self.cont = cont
         self.win = win
         self.points = points
+        self.winNumb = Game.validateWinNumb(winNumb)
 
         self.moveDict = Game.makeMoveDict(self.mset)
         self.currentMove = None
@@ -52,6 +53,12 @@ class Game():
         #     int:
         # }
 
+    @staticmethod
+    def validateWinNumb(n):
+        if bool(n and not (n&(n-1))):
+            return n
+        print("Your target number cannot be reached in this game")
+        exit(0)
 
     @staticmethod
     def makeMoveDict(mset, rotations=((1, -1), (0, 0), (-1, 1), (2, 2))):
@@ -80,6 +87,7 @@ class Game():
         tempX, tempY = np.where(self.field == 0)
         if len(tempY) == 0:
             self.cont = False
+            return self
         ind = ra.randrange(tempX.shape[0])
         self.field[tempX[ind]][tempY[ind]] = int(np.random.choice((2, 4), 1, p=(.8, .2)))
         self.points += self.field[tempX[ind]][tempY[ind]]
@@ -89,7 +97,7 @@ class Game():
     def executeMove(self):
 
         def getMove():
-            move = input('\n'+ self.mset + "?\t")
+            move = input('\n'+ self.mset + "?\n>>> ")
             if len(move) != 1 or move not in self.mset:
                 move = getMove()
             return move
@@ -136,25 +144,26 @@ class Game():
 
 
     def CheckWinAndContinue(self):
-        if 2048 in self.field.flatten():
+        if self.winNumb in self.field.flatten():
             self.win = True
             print("You have won!")
-            c = input("Type 'yes' if you wish to continue playing\t").lower()
+            c = input("Type 'yes' if you wish to continue playing\n>>> ").lower()
             self.cont = True if c == 'yes' else False
         # return not self.win or self.cont
         return self
 
 
-    def play(self, n=10):
-        # todo: add  while (not self.win or self.cont): continue playing
+    def play(self, n=20):
+        # FIXME: while loop not terminating right as it should
 
         self.add2or4()
-        for i in range(n):
+        while (not self.win or self.cont):
+            self.CheckWinAndContinue()
             self.add2or4().printField().executeMove()
 
 
 def run():
-    game = Game(MSet='wasd')
+    game = Game(size=3, MSet='wasd', winNumb=16)
     game.play()  # While loop is in this method - when loop ends, game is over
     game.printField()
     # print(f"You got {game.points} points!")
