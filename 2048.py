@@ -25,17 +25,13 @@ class Game():
 
     @staticmethod
     def makeMoveDict(mset):
-
         if len(set(mset)) != 4:
             print('Invalid move set, has to be four unique chars')
             exit(1)
 
         tempDict = {}
-        rotations = ((1, -1),
-                     (0, 0),
-                     (-1, 1),
-                     (2, 2)
-                     )
+        rotations = ((1, -1), (0, 0), (-1, 1), (2, 2))
+        
         for i in range(4):
             tempDict[mset[i]] = rotations[i]
         return tempDict
@@ -47,7 +43,6 @@ class Game():
         return self
 
     def add2or4(self):
-
         tempX, tempY = np.where(self.field == 0)
         if len(tempY) != 0:
             ind = ra.randrange(tempX.shape[0])
@@ -58,7 +53,6 @@ class Game():
         return self
 
     def executeMove(self):
-
         def getMove():
             move = input('\n' + self.mset + "?\n>>> ").lower()
             if move == self.esc:
@@ -73,6 +67,7 @@ class Game():
 
         rotKey = self.moveDict[self.currentMove]
         temp_field = np.rot90(self.field, rotKey[0])
+        
         for i in range(self.size):
             temp_field[i] = self.handleRow(temp_field[i], self.size)
 
@@ -83,7 +78,7 @@ class Game():
         return self
 
     def handleRow(self, row, n):
-
+        
         def mergeLine(line):
             temp = line.tolist()  # for changing values inline
             for j in range(len(temp) - 1):
@@ -92,7 +87,6 @@ class Game():
                     self.points += (sc)
                     temp[j] = sc;
                     temp[j + 1] = 0
-
             return np.asarray([x for x in temp if x != 0], dtype=int)
 
         temp_row = np.delete(row, np.where(row == 0))
@@ -102,7 +96,6 @@ class Game():
     def movePossible(self, field):
 
         def handleRow(row, n):
-
             def handelMerge(line):
                 temp = line.tolist()  # for changing values inline
                 for j in range(len(temp) - 1):
@@ -110,7 +103,7 @@ class Game():
                         temp[j] = line[j] + line[j + 1]
                         temp[j + 1] = 0
                 return np.asarray([x for x in temp if x != 0], dtype=int)
-
+            
             temp_row = np.delete(row, np.where(row == 0))
             newRow = handelMerge(temp_row) if len(temp_row) > 1 else temp_row
             return np.append(newRow, [0 for k in range((n - len(newRow)))])
@@ -131,16 +124,13 @@ class Game():
                 notPossibleMoves += 1
 
             del (testField, tempField, nowField)
-
         return notPossibleMoves != len(self.moveDict)
 
-    def play(self, n=20):
+    def play(self):
         print("Welcome to this game of 2048\n"
               f"Move the tiles till you reach {self.winNumb}!\n"
               f"Type '{self.esc}' to stop the game")
-
         self.add2or4()
-
         while True:
             if self.winNumb in self.field.flatten():
                 self.printField()
@@ -156,13 +146,11 @@ class Game():
             if not self.goodToGo:
                 break
             self.printField().executeMove()
-
         self.printField
 
 
 def run():
-    Game().play()
+    Game(size=4, MSet="wasd", winNumb=2048, esc='exit').play()
     print("\nGame is over, thank you for playing")
-
 
 run()
