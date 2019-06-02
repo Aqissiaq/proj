@@ -83,9 +83,8 @@ class Game():
             temp = line.tolist()  # for changing values inline
             for j in range(len(temp) - 1):
                 if (temp[j] == temp[j + 1]):
-                    sc = line[j] + line[j + 1]
-                    self.points += (sc)
-                    temp[j] = sc;
+                    self.points += temp[j]*2
+                    temp[j] *= 2
                     temp[j + 1] = 0
             return np.asarray([x for x in temp if x != 0], dtype=int)
 
